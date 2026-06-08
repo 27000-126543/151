@@ -53,8 +53,19 @@ export const getCarbonCredits = async (
     const type = req.query.type as CreditType | undefined;
 
     const result = await carbonService.getCarbonCredits(userId, type, page, pageSize);
-    paginatedResponse(res, result.items, result.total, page, pageSize, {
-      balance: result.balance,
+    res.json({
+      success: true,
+      message: "查询成功",
+      data: {
+        items: result.items,
+        balance: result.balance,
+        pagination: {
+          page,
+          pageSize,
+          total: result.total,
+          totalPages: Math.ceil(result.total / pageSize),
+        },
+      },
     });
   } catch (error) {
     next(error);
@@ -75,9 +86,9 @@ export const generateCarbonReport = async (
       new Date(startDate),
       new Date(endDate),
       format
-    );
+    ) as any;
 
-    if (format === "excel" && typeof result === "object" && result.filePath) {
+    if (format === "excel" && result.filePath) {
       const filePath = join(process.cwd(), result.filePath);
       const fileStream = createReadStream(filePath);
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

@@ -25,7 +25,7 @@ export class DemandResponseService {
       responseNo: generateOrderNo("DR"),
       status: ResponseStatus.DRAFT,
       createdBy: operatorId,
-    });
+    }) as any;
 
     await this.drRepo.save(dr);
     logger.info(`创建需求响应事件: ${dr.id} - ${dr.name}`);
@@ -269,7 +269,7 @@ export class DemandResponseService {
     task.actualLoadReduction = actualLoadReduction;
     task.completedAt = new Date();
     task.incentiveAmount = finalIncentive;
-    task.remark = remark;
+    task.remark = remark || "";
     await this.taskRepo.save(task);
 
     await this.checkDemandResponseCompletion(task.demandResponseId);
@@ -341,7 +341,7 @@ export class DemandResponseService {
     dr.totalIncentive = roundTo(totalIncentive, 2);
     dr.settledBy = settledBy;
     dr.settledAt = new Date();
-    dr.remark = remark;
+    dr.remark = remark || "";
     await this.drRepo.save(dr);
 
     sendToRole(UserRole.OPERATOR, NotificationType.DEMAND_RESPONSE, {
@@ -391,6 +391,14 @@ export class DemandResponseService {
       where,
       relations: ["demandResponse", "user"],
     });
+  }
+
+  async getDemandResponseDetail(drId: string) {
+    const dr = await this.drRepo.findOne({
+      where: { id: drId },
+      relations: ["tasks", "tasks.user"],
+    });
+    return dr;
   }
 }
 

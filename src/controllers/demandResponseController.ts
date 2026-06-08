@@ -60,16 +60,13 @@ export const getDemandResponseDetail = async (
 ) => {
   try {
     const drId = req.params.id;
-    const result = await demandResponseService.drRepo.findOne({
-      where: { id: drId },
-      relations: ["tasks", "tasks.user"],
-    });
+    const result = await demandResponseService.getDemandResponseDetail(drId);
     if (!result) {
-      throw new AppError("需求响应事件不存在", 404);
+      return next(new AppError("需求响应事件不存在", 404));
     }
     successResponse(res, result);
   } catch (error: any) {
-    next(new AppError(error.message, 404));
+    next(error);
   }
 };
 

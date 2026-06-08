@@ -27,6 +27,25 @@ export const errorHandler = (
     });
   }
 
+  const errMsg = err.message.toLowerCase();
+  if (
+    errMsg.includes("database") ||
+    errMsg.includes("connection") ||
+    errMsg.includes("sqlite") ||
+    errMsg.includes("postgres") ||
+    errMsg.includes("not established") ||
+    errMsg.includes("query") ||
+    errMsg.includes("repository") ||
+    errMsg.includes("find") ||
+    errMsg.includes("save")
+  ) {
+    logger.warn(`Database error: ${err.message}`, { path: req.path });
+    return res.status(503).json({
+      success: false,
+      message: "数据库服务暂不可用，请稍后重试",
+    });
+  }
+
   logger.error(`Unexpected error: ${err.message}`, { stack: err.stack, path: req.path });
   res.status(500).json({
     success: false,

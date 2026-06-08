@@ -33,7 +33,7 @@ export class ElectricityPlanService {
       ...planData,
       userId,
       status: PlanStatus.PENDING,
-    });
+    }) as any;
 
     await this.planRepo.save(plan);
     logger.info(`用户 ${userId} 提交用电计划 ${plan.id}`);

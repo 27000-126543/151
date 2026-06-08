@@ -70,9 +70,9 @@ export const exportReport = async (
     const reportId = req.params.id;
     const { format } = req.body;
 
-    const result = await dailyReportService.exportReport(reportId, format);
+    const result = await dailyReportService.exportReport(reportId, format) as any;
 
-    if (format === "excel" && typeof result === "object" && result.filePath) {
+    if (format === "excel" && result.filePath) {
       const fileStream = createReadStream(result.filePath);
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       res.setHeader("Content-Disposition", `attachment; filename="${result.fileName}"`);

@@ -2,10 +2,10 @@ import { Repository, Between } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { DailyReport } from "../entities/DailyReport";
 import { DeviceData } from "../entities/DeviceData";
-import { Device, DeviceStatus } from "../entities/Device";
+import { Device, DeviceStatus, DeviceType } from "../entities/Device";
 import { DemandResponseTask, TaskStatus } from "../entities/DemandResponseTask";
 import { WorkOrder, WorkOrderStatus } from "../entities/WorkOrder";
-import { Alert, AlertSeverity } from "../entities/Alert";
+import { Alert, AlertLevel, AlertStatus } from "../entities/Alert";
 import { PowerTrade, TradeStatus } from "../entities/PowerTrade";
 import { CarbonEmission } from "../entities/CarbonEmission";
 import { ElectricityPrice } from "../entities/ElectricityPrice";
@@ -149,9 +149,9 @@ export class DailyReportService {
 
     return {
       peakLoad: roundTo(peakLoad, 4),
-      peakLoadTime,
+      peakLoadTime: peakLoadTime || undefined,
       valleyLoad: valleyLoad === Infinity ? 0 : roundTo(valleyLoad, 4),
-      valleyLoadTime,
+      valleyLoadTime: valleyLoadTime || undefined,
       averageLoad,
       totalConsumption: roundTo(totalConsumption, 4),
       hourlyLoadData: hourlyLoad.map((l) => roundTo(l, 4)),
@@ -182,11 +182,9 @@ export class DailyReportService {
       const powerInput = record.powerInput || 0;
       const stateOfCharge = record.stateOfCharge || 0;
 
-      if (deviceType === "pv") {
+      if (deviceType === DeviceType.PV) {
         pvGeneration += powerOutput;
-      } else if (deviceType === "wind") {
-        windGeneration += powerOutput;
-      } else if (deviceType === "storage") {
+      } else if (deviceType === DeviceType.STORAGE) {
         if (powerInput > powerOutput) {
           storageCharge += powerInput - powerOutput;
         } else {
@@ -194,10 +192,10 @@ export class DailyReportService {
         }
       }
 
-      if (powerInput > 0 && !["pv", "wind"].includes(deviceType || "")) {
+      if (powerInput > 0 && deviceType !== DeviceType.PV) {
         gridImport += powerInput;
       }
-      if (powerOutput > 0 && ["pv", "wind", "storage"].includes(deviceType || "")) {
+      if (powerOutput > 0 && (deviceType === DeviceType.PV || deviceType === DeviceType.STORAGE)) {
         gridExport += powerOutput;
       }
     }
@@ -302,11 +300,15 @@ export class DailyReportService {
     if (region) whereConditions.region = region;
 
     const activeAlerts = await this.alertRepo.count({
-      where: { ...whereConditions, status: "active" as any },
+      where: [
+        { ...whereConditions, status: AlertStatus.PENDING },
+        { ...whereConditions, status: AlertStatus.ACKNOWLEDGED },
+        { ...whereConditions, status: AlertStatus.PROCESSING },
+      ],
     });
 
     const criticalAlerts = await this.alertRepo.count({
-      where: { ...whereConditions, level: AlertSeverity.CRITICAL },
+      where: { ...whereConditions, level: AlertLevel.CRITICAL },
     });
 
     return { activeAlerts, criticalAlerts };

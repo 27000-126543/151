@@ -172,7 +172,7 @@ export class PowerTradeService {
       status: TradeStatus.DRAFT,
       createdBy: traderId,
       totalAmount: roundTo(tradeData.quantity * tradeData.bidPrice, 2),
-    });
+    }) as any;
 
     await this.tradeRepo.save(trade);
     logger.info(`交易员 ${traderId} 创建交易 ${trade.tradeNo}`);
@@ -217,7 +217,7 @@ export class PowerTradeService {
     trade.status = TradeStatus.APPROVED;
     trade.approvedBy = approverId;
     trade.approvedAt = new Date();
-    trade.approvalRemark = approvalRemark;
+    trade.approvalRemark = approvalRemark || "";
     await this.tradeRepo.save(trade);
 
     sendToUser(trade.createdBy!, NotificationType.TRADE, {

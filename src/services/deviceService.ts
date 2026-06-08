@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Repository, Between, MoreThan } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { Device, DeviceType, DeviceStatus, RiskLevel } from "../entities/Device";
 import { DeviceData } from "../entities/DeviceData";
@@ -440,7 +440,7 @@ export class DeviceService {
     return this.deviceDataRepo.find({
       where: {
         deviceId,
-        timestamp: { $between: [startDate, endDate] } as any,
+        timestamp: Between(startDate, endDate),
       },
       order: { timestamp: "ASC" },
     });
@@ -455,7 +455,7 @@ export class DeviceService {
       where: {
         deviceId,
         alertType: AlertType.FAULT,
-        createdAt: { $gt: thirtyDaysAgo } as any,
+        createdAt: MoreThan(thirtyDaysAgo),
       },
     });
 

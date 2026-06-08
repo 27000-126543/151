@@ -18,6 +18,7 @@ export enum NotificationType {
   CARBON = "carbon",
   SYSTEM = "system",
   PRICE = "price",
+  REPORT = "report",
 }
 
 export enum NotificationSeverity {

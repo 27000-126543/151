@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Repository, MoreThan, ArrayContains } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { WorkOrder, WorkOrderStatus, FaultLevel, RepairSkill } from "../entities/WorkOrder";
 import { RepairTeam, TeamStatus } from "../entities/RepairTeam";
@@ -202,7 +202,7 @@ export class WorkOrderService {
     const recentOrders = await this.orderRepo.count({
       where: {
         deviceId,
-        createdAt: { $gt: thirtyDaysAgo } as any,
+        createdAt: MoreThan(thirtyDaysAgo),
       },
     });
 
@@ -294,10 +294,10 @@ export class WorkOrderService {
     order.status = WorkOrderStatus.COMPLETED;
     order.completedAt = new Date();
     order.repairContent = repairContent;
-    order.partsReplaced = partsReplaced;
-    order.repairCost = repairCost;
-    order.beforeImages = beforeImages;
-    order.afterImages = afterImages;
+    order.partsReplaced = partsReplaced || "";
+    order.repairCost = repairCost || 0;
+    order.beforeImages = beforeImages || [];
+    order.afterImages = afterImages || [];
     await this.orderRepo.save(order);
 
     if (order.assignedTeamId) {
@@ -409,7 +409,7 @@ export class WorkOrderService {
   async getRepairTeams(status?: TeamStatus, skill?: RepairSkill, page: number = 1, pageSize: number = 20) {
     const where: any = { isActive: true };
     if (status) where.status = status;
-    if (skill) where.skills = { $contains: [skill] } as any;
+    if (skill) where.skills = ArrayContains([skill]);
 
     const [items, total] = await this.teamRepo.findAndCount({
       where,
@@ -428,7 +428,7 @@ export class WorkOrderService {
       status: WorkOrderStatus.PENDING,
       dueDate: data.dueDate || this.calculateDueDate(data.faultLevel || FaultLevel.MODERATE),
       createdBy: operatorId,
-    });
+    }) as any;
 
     await this.orderRepo.save(workOrder);
 

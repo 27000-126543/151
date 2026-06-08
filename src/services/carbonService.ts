@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Repository, Between } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { CarbonEmission, EnergySource, EmissionScope } from "../entities/CarbonEmission";
 import { CarbonCredit, CreditType, CreditStatus } from "../entities/CarbonCredit";
@@ -180,7 +180,7 @@ export class CarbonService {
     const emissions = await this.emissionRepo.find({
       where: {
         userId,
-        emissionDate: { $between: [startOfDay(startDate), endOfDay(endDate)] } as any,
+        emissionDate: Between(startOfDay(startDate), endOfDay(endDate)),
       },
       order: { emissionDate: "ASC", energySource: "ASC" },
     });

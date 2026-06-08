@@ -67,7 +67,12 @@ AppDataSource.initialize()
   })
   .catch((error) => {
     logger.error("数据库连接失败:", error);
-    process.exit(1);
+    logger.info("将在无数据库模式下启动服务，部分接口将返回错误");
+
+    server.listen(PORT, () => {
+      logger.info(`服务器运行在端口 ${PORT}（无数据库模式）`);
+      logger.info(`健康检查: http://localhost:${PORT}/health`);
+    });
   });
 
 process.on("unhandledRejection", (error: Error) => {

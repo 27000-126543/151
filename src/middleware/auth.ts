@@ -12,30 +12,30 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = (requiredRole?: UserRole) => {
+export const authMiddleware = (...requiredRoles: UserRole[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new AppError("未提供认证令牌", 401);
+      return next(new AppError("未提供认证令牌", 401));
     }
 
     try {
       const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, config.jwt.secret) as any;
+      const decoded = jwt.verify(token, config.jwt.secret as string) as any;
       req.user = decoded;
 
-      if (requiredRole && decoded.role !== requiredRole && decoded.role !== UserRole.ADMIN) {
-        throw new AppError("权限不足", 403);
+      if (requiredRoles.length > 0 && !requiredRoles.includes(decoded.role) && decoded.role !== UserRole.ADMIN) {
+        return next(new AppError("权限不足", 403));
       }
 
       next();
     } catch (error) {
-      throw new AppError("认证令牌无效或已过期", 401);
+      next(new AppError("认证令牌无效或已过期", 401));
     }
   };
 };
 
 export const generateToken = (user: { id: string; role: UserRole; username: string }) => {
-  return jwt.sign(user, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+  return (jwt as any).sign(user, config.jwt.secret as string, { expiresIn: config.jwt.expiresIn as string });
 };

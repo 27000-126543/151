@@ -91,6 +91,9 @@ export class DemandResponse {
   @Column({ type: "timestamp", nullable: true })
   settledAt: Date;
 
+  @Column({ type: "text", nullable: true })
+  remark: string;
+
   @OneToMany(() => DemandResponseTask, (task) => task.demandResponse)
   tasks: DemandResponseTask[];
 
